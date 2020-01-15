@@ -28,6 +28,7 @@
 		import { OrbitControls } from './lib/OrbitControls.js';
 		import { FirstPersonControls } from './lib/FirstPersonControls.js';
 		import { BufferGeometryUtils } from './lib/BufferGeometryUtils.js';
+		import { Water } from './lib/Water.js';
 
 		function getHeightData(img, scale) {
 
@@ -97,14 +98,14 @@
 				var planes = createPlanes();
 
 				for (var i = 0; i < planes.length; i++) {
-					planes[i].attributes.uv.array[0] = 0 / 2048;
-					planes[i].attributes.uv.array[1] = 2048 / 2048;
-					planes[i].attributes.uv.array[2] = 512 / 2048;
-					planes[i].attributes.uv.array[3] = 2048 / 2048;
-					planes[i].attributes.uv.array[4] = 0 / 2048;
-					planes[i].attributes.uv.array[5] = 1536 / 2048;
-					planes[i].attributes.uv.array[6] = 512 / 2048;
-					planes[i].attributes.uv.array[7] = 1536 / 2048;
+					planes[i].attributes.uv.array[0] = 0.00;
+					planes[i].attributes.uv.array[1] = 1.00;
+					planes[i].attributes.uv.array[2] = 0.25;
+					planes[i].attributes.uv.array[3] = 1.00;
+					planes[i].attributes.uv.array[4] = 0.00;
+					planes[i].attributes.uv.array[5] = 0.75;
+					planes[i].attributes.uv.array[6] = 0.25;
+					planes[i].attributes.uv.array[7] = 0.75;
 				}
 
 				result.dirt = planes;
@@ -115,24 +116,24 @@
 				var planes = createPlanes();
 
 				for (var i = 0; i < planes.length; i++) {
-					planes[i].attributes.uv.array[0] = 1024 / 2048;
-					planes[i].attributes.uv.array[1] = 2048 / 2048;
-					planes[i].attributes.uv.array[2] = 1536 / 2048;
-					planes[i].attributes.uv.array[3] = 2048 / 2048;
-					planes[i].attributes.uv.array[4] = 1024 / 2048;
-					planes[i].attributes.uv.array[5] = 1536 / 2048;
-					planes[i].attributes.uv.array[6] = 1536 / 2048;
-					planes[i].attributes.uv.array[7] = 1536 / 2048;
+					planes[i].attributes.uv.array[0] = 0.50;
+					planes[i].attributes.uv.array[1] = 1.00;
+					planes[i].attributes.uv.array[2] = 0.75;
+					planes[i].attributes.uv.array[3] = 1.00;
+					planes[i].attributes.uv.array[4] = 0.50;
+					planes[i].attributes.uv.array[5] = 0.75;
+					planes[i].attributes.uv.array[6] = 0.75;
+					planes[i].attributes.uv.array[7] = 0.75;
 				}
 
-				planes[2].attributes.uv.array[0] = 512 / 2048;
-				planes[2].attributes.uv.array[1] = 2048 / 2048;
-				planes[2].attributes.uv.array[2] = 1024 / 2048;
-				planes[2].attributes.uv.array[3] = 2048 / 2048;
-				planes[2].attributes.uv.array[4] = 512 / 2048;
-				planes[2].attributes.uv.array[5] = 1536 / 2048;
-				planes[2].attributes.uv.array[6] = 1024 / 2048;
-				planes[2].attributes.uv.array[7] = 1536 / 2048;
+				planes[2].attributes.uv.array[0] = 0.25;
+				planes[2].attributes.uv.array[1] = 1.00;
+				planes[2].attributes.uv.array[2] = 0.50;
+				planes[2].attributes.uv.array[3] = 1.00;
+				planes[2].attributes.uv.array[4] = 0.25;
+				planes[2].attributes.uv.array[5] = 0.75;
+				planes[2].attributes.uv.array[6] = 0.50;
+				planes[2].attributes.uv.array[7] = 0.75;
 
 				result.dirtGrass = planes;
 			}
@@ -142,40 +143,52 @@
 
 		function loadTerrain(scene) {
 			var img = new Image();
-			img.src = "textures/heightmap.png";
+			// img.src = "textures/heightmap.png";
+			img.src = "textures/heightmap_256.png";
 			img.onload = function () {
 				var data = getHeightData(img, 1);
 
 				var texture_complete_basecolor = new THREE.TextureLoader().load('textures/complete_basecolor.jpg');
 				var texture_complete_normal = new THREE.TextureLoader().load('textures/complete_normal.jpg');
-				var material = new THREE.MeshPhongMaterial({ map: texture_complete_basecolor, normalMap: texture_complete_normal });
+				var material = new THREE.MeshPhongMaterial({
+					map: texture_complete_basecolor,
+					normalMap: texture_complete_normal
+				});
+
 				var terrainPlains = createTerrainPlanes();
 				var offsetDivider = 2;
 
-				var geometries = [];
+				var terrainGeometries = [];
+				var riverGeometries = [];
 				var matrix = new THREE.Matrix4();
 
 				var xOffset = data.length / offsetDivider;
 
 				var addCube = function (x, y, z, material) {
 					matrix.makeTranslation(x, y, z);
-					geometries.push(terrainPlains[material][0].clone().applyMatrix(matrix));
-					geometries.push(terrainPlains[material][1].clone().applyMatrix(matrix));
-					geometries.push(terrainPlains[material][2].clone().applyMatrix(matrix));
-					geometries.push(terrainPlains[material][3].clone().applyMatrix(matrix));
-					geometries.push(terrainPlains[material][4].clone().applyMatrix(matrix));
-					geometries.push(terrainPlains[material][5].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][0].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][1].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][2].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][3].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][4].clone().applyMatrix(matrix));
+					terrainGeometries.push(terrainPlains[material][5].clone().applyMatrix(matrix));
 				}
 
-				var addMissingCubes = function (targetHeight, currentHeight, x, z) {
-					if (currentHeight < targetHeight) {
-						while (currentHeight++ < targetHeight) {
-							addCube(x - xOffset, currentHeight - 128, z - zOffset, "dirt");
+				var addRiverPlane = function (x, z) {
+					var plane = new THREE.PlaneBufferGeometry(1, 1);
+					plane.translate(x, -z, 0);
+					riverGeometries.push(plane);
+				}
+
+				var addMissingCubes = function (targetHeight, offset, x, z) {
+					if (offset > 0) {
+						while (offset-- > 1) {
+							addCube(x - xOffset, targetHeight + offset - 128, z - zOffset, "dirt");
 						}
 					}
 					else {
-						while (currentHeight-- > targetHeight) {
-							addCube(x - xOffset, currentHeight - 128, z - zOffset, "dirt");
+						while (offset++ < -1) {
+							addCube(x - xOffset, targetHeight + offset - 128, z - zOffset, "dirt");
 						}
 					}
 				}
@@ -187,43 +200,65 @@
 					for (var col = 0; col < dataRow.length; col++) {
 						var heightInfo = dataRow[col];
 						var height = heightInfo.value;
+						var actualHeight = height - 128;
 
-						addCube(row - xOffset, height - 128, col - zOffset, "dirtGrass");
+						addCube(row - xOffset, actualHeight, col - zOffset, actualHeight < 0 ? "dirt" : "dirtGrass");
+
+						if(actualHeight < 0) {
+							addRiverPlane(row - xOffset, col - zOffset);
+						}
 
 						var nextRow = row + 1;
+						var prevRow = row - 1;
 						var nextCol = col + 1;
+						var prevCol = col - 1;
 
 						var nextRowHeight = nextRow < data.length ? data[nextRow][col].value : height;
+						var prevRowHeight = prevRow >= 0 ? data[prevRow][col].value : height;
 						var nextColHeight = nextCol < dataRow.length ? data[row][nextCol].value : height;
+						var prevColHeight = prevCol >= 0 ? data[row][prevCol].value : height;
 
 						var nextRowHeightDiff = nextRowHeight - height;
+						var prevRowHeightDiff = prevRowHeight - height;
 						var nextColHeightDiff = nextColHeight - height;
+						var prevColHeightDiff = prevColHeight - height;
 
-						if (Math.abs(nextRowHeightDiff) > 1 || Math.abs(nextColHeightDiff) > 1) {
+						if (nextRowHeightDiff < -1) {
+							addMissingCubes(height, nextRowHeightDiff, row, col);
+						}
+						else if (nextRowHeightDiff > 1) {
+							addMissingCubes(height, nextRowHeightDiff, nextRow, col);
+						}
 
-							// in questo caso le differenze sono entrambe positive o negative
-							if (nextRowHeightDiff * nextColHeightDiff > 0) {
-								var nextHeightToUse = Math.max(nextRowHeight, nextColHeight);
-								addMissingCubes(height, nextHeightToUse, row, col);
-							}
-							else {
-								if (Math.abs(nextRowHeightDiff) > 1) {
-									addMissingCubes(height, nextRowHeight, row, col);
-								}
-
-								if (Math.abs(nextColHeightDiff) > 1) {
-									addMissingCubes(height, nextColHeight, row, col);
-								}
-							}
+						if (nextColHeightDiff < -1) {
+							addMissingCubes(height, nextColHeightDiff, row, col);
+						}
+						else if (nextColHeightDiff > 1) {
+							addMissingCubes(height, nextColHeightDiff, row, nextCol);
 						}
 					}
 				}
 
-				var geometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
-				geometry.computeBoundingSphere();
+				var terrainGeometry = BufferGeometryUtils.mergeBufferGeometries(terrainGeometries);
+				terrainGeometry.computeBoundingSphere();
 
-				var mesh = new THREE.Mesh(geometry, material);
-				scene.add(mesh);
+				var terraingMesh = new THREE.Mesh(terrainGeometry, material);
+				terraingMesh.receiveShadow = true;
+				scene.add(terraingMesh);
+
+				var riverGeometry = BufferGeometryUtils.mergeBufferGeometries(riverGeometries);
+				riverGeometry.computeBoundingSphere();
+				var river = new Water(riverGeometry, {
+					color: 0xAADCFF,
+					scale: 1,
+					flowDirection: new THREE.Vector2(1, 0),
+					textureWidth: 1024,
+					textureHeight: 1024
+				});
+
+				river.position.y = 0.3;
+				river.rotation.x = Math.PI * - 0.5;
+				scene.add(river);
 			}
 		}
 
