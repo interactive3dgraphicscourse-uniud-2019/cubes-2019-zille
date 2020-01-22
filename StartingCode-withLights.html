@@ -67,7 +67,7 @@
 			return data;
 		}
 
-		function createTerrainPlanes() {
+		function createBoxPlanes() {
 
 			var createPlanes = function () {
 				var pxGeometry = new THREE.PlaneBufferGeometry(1, 1);
@@ -116,6 +116,11 @@
 				var planes = createPlanes();
 
 				for (var i = 0; i < planes.length; i++) {
+
+					// Skip positive and negative Y
+					if (i == 2 || i == 3) {
+						continue;
+					}
 					planes[i].attributes.uv.array[0] = 0.50;
 					planes[i].attributes.uv.array[1] = 1.00;
 					planes[i].attributes.uv.array[2] = 0.75;
@@ -135,27 +140,72 @@
 				planes[2].attributes.uv.array[6] = 0.50;
 				planes[2].attributes.uv.array[7] = 0.75;
 
+				planes[3].attributes.uv.array[0] = 0.00;
+				planes[3].attributes.uv.array[1] = 1.00;
+				planes[3].attributes.uv.array[2] = 0.25;
+				planes[3].attributes.uv.array[3] = 1.00;
+				planes[3].attributes.uv.array[4] = 0.00;
+				planes[3].attributes.uv.array[5] = 0.75;
+				planes[3].attributes.uv.array[6] = 0.25;
+				planes[3].attributes.uv.array[7] = 0.75;
+
 				result.dirtGrass = planes;
+			}
+
+			// Plaster
+			{
+				var planes = createPlanes();
+
+				for (var i = 0; i < planes.length; i++) {
+					planes[i].attributes.uv.array[0] = 0.75;
+					planes[i].attributes.uv.array[1] = 1.00;
+					planes[i].attributes.uv.array[2] = 1.00;
+					planes[i].attributes.uv.array[3] = 1.00;
+					planes[i].attributes.uv.array[4] = 0.75;
+					planes[i].attributes.uv.array[5] = 0.75;
+					planes[i].attributes.uv.array[6] = 1.00;
+					planes[i].attributes.uv.array[7] = 0.75;
+				}
+
+				result.plaster = planes;
 			}
 
 			return result;
 		}
 
-		function loadTerrain(scene) {
+		function addBoxGeometry(geometries, planes, material, matrix) {
+			geometries.push(planes[material][0].clone().applyMatrix(matrix));
+			geometries.push(planes[material][1].clone().applyMatrix(matrix));
+			geometries.push(planes[material][2].clone().applyMatrix(matrix));
+			geometries.push(planes[material][3].clone().applyMatrix(matrix));
+			geometries.push(planes[material][4].clone().applyMatrix(matrix));
+			geometries.push(planes[material][5].clone().applyMatrix(matrix));
+		}
+
+		function ceateBox(planes, planesMaterialName, material) {
+			var geometries = [];
+			geometries.push(planes[planesMaterialName][0].clone());
+			geometries.push(planes[planesMaterialName][1].clone());
+			geometries.push(planes[planesMaterialName][2].clone());
+			geometries.push(planes[planesMaterialName][3].clone());
+			geometries.push(planes[planesMaterialName][4].clone());
+			geometries.push(planes[planesMaterialName][5].clone());
+			
+			var boxGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
+			boxGeometry.computeBoundingSphere();
+
+			var boxMesh = new THREE.Mesh(boxGeometry, material);
+			boxMesh.receiveShadow = true;
+			boxMesh.castShadow = true;
+			return boxMesh;
+		}
+
+		function loadTerrain(scene, planes, material) {
 			var img = new Image();
-			// img.src = "textures/heightmap.png";
-			img.src = "textures/heightmap_256.png";
+			img.src = "textures/heightmap_collina.png";
 			img.onload = function () {
 				var data = getHeightData(img, 1);
 
-				var texture_complete_basecolor = new THREE.TextureLoader().load('textures/complete_basecolor.jpg');
-				var texture_complete_normal = new THREE.TextureLoader().load('textures/complete_normal.jpg');
-				var material = new THREE.MeshPhongMaterial({
-					map: texture_complete_basecolor,
-					normalMap: texture_complete_normal
-				});
-
-				var terrainPlains = createTerrainPlanes();
 				var offsetDivider = 2;
 
 				var terrainGeometries = [];
@@ -166,12 +216,7 @@
 
 				var addCube = function (x, y, z, material) {
 					matrix.makeTranslation(x, y, z);
-					terrainGeometries.push(terrainPlains[material][0].clone().applyMatrix(matrix));
-					terrainGeometries.push(terrainPlains[material][1].clone().applyMatrix(matrix));
-					terrainGeometries.push(terrainPlains[material][2].clone().applyMatrix(matrix));
-					terrainGeometries.push(terrainPlains[material][3].clone().applyMatrix(matrix));
-					terrainGeometries.push(terrainPlains[material][4].clone().applyMatrix(matrix));
-					terrainGeometries.push(terrainPlains[material][5].clone().applyMatrix(matrix));
+					addBoxGeometry(terrainGeometries, planes, material, matrix);
 				}
 
 				var addRiverPlane = function (x, z) {
@@ -197,15 +242,15 @@
 					var dataRow = data[row];
 					var zOffset = dataRow.length / offsetDivider;
 
-					for (var col = 0; col < dataRow.length; col++) {
+					for (var col = dataRow.length - 1; col >= 0; col--) {
 						var heightInfo = dataRow[col];
 						var height = heightInfo.value;
 						var actualHeight = height - 128;
 
-						addCube(row - xOffset, actualHeight, col - zOffset, actualHeight < 0 ? "dirt" : "dirtGrass");
+						addCube(col - zOffset, actualHeight, row - zOffset, actualHeight < 0 ? "dirt" : "dirtGrass");
 
-						if(actualHeight < 0) {
-							addRiverPlane(row - xOffset, col - zOffset);
+						if (actualHeight < 0) {
+							addRiverPlane(col - xOffset, row - zOffset);
 						}
 
 						var nextRow = row + 1;
@@ -224,17 +269,17 @@
 						var prevColHeightDiff = prevColHeight - height;
 
 						if (nextRowHeightDiff < -1) {
-							addMissingCubes(height, nextRowHeightDiff, row, col);
+							addMissingCubes(height, nextRowHeightDiff, col, row);
 						}
 						else if (nextRowHeightDiff > 1) {
-							addMissingCubes(height, nextRowHeightDiff, nextRow, col);
+							addMissingCubes(height, nextRowHeightDiff, col, nextRow);
 						}
 
 						if (nextColHeightDiff < -1) {
-							addMissingCubes(height, nextColHeightDiff, row, col);
+							addMissingCubes(height, nextColHeightDiff, col, row);
 						}
 						else if (nextColHeightDiff > 1) {
-							addMissingCubes(height, nextColHeightDiff, row, nextCol);
+							addMissingCubes(height, nextColHeightDiff, nextCol, row);
 						}
 					}
 				}
@@ -242,9 +287,9 @@
 				var terrainGeometry = BufferGeometryUtils.mergeBufferGeometries(terrainGeometries);
 				terrainGeometry.computeBoundingSphere();
 
-				var terraingMesh = new THREE.Mesh(terrainGeometry, material);
-				terraingMesh.receiveShadow = true;
-				scene.add(terraingMesh);
+				var terrainMesh = new THREE.Mesh(terrainGeometry, material);
+				terrainMesh.receiveShadow = true;
+				scene.add(terrainMesh);
 
 				var riverGeometry = BufferGeometryUtils.mergeBufferGeometries(riverGeometries);
 				riverGeometry.computeBoundingSphere();
@@ -262,9 +307,72 @@
 			}
 		}
 
-		var scene, camera, renderer, controls, stats;
+		function createWall(width, height, hasDoor, planes, material) {
+			var wallGeometries = [];
+			var matrix = new THREE.Matrix4();
+			var doorPosition = hasDoor ? Math.floor(width / 2) : -1;
+
+			for (var w = 0; w < width; w++) {
+				for (var h = 0; h < height; h++) {
+
+					if (w == doorPosition && h < 2) {
+						continue;
+					}
+
+					matrix.makeTranslation(w, h, 0);
+					addBoxGeometry(wallGeometries, planes, "plaster", matrix);
+				}
+			}
+
+			var wallGeometry = BufferGeometryUtils.mergeBufferGeometries(wallGeometries);
+			wallGeometry.computeBoundingSphere();
+
+			var wallMesh = new THREE.Mesh(wallGeometry, material);
+			wallMesh.receiveShadow = true;
+			wallMesh.castShadow = true;
+			return wallMesh;
+		}
+
+		function createHouse(x, z, width, height, depth, planes, material) {
+			var frontWall = createWall(width, height - 1, true, planes, material);
+			frontWall.position.z = depth - 1;
+
+			var backWall = createWall(width, height - 1, false, planes, material);
+
+			var leftWall = createWall(depth - 2, height - 1, false, planes, material);
+			leftWall.position.z = 1;
+			leftWall.rotation.y = -90 * Math.PI / 180;
+
+			var rightWall = createWall(depth - 2, height - 1, false, planes, material);
+			rightWall.position.x = width - 1;
+			rightWall.position.z = 1;
+			rightWall.rotation.y = -90 * Math.PI / 180;
+
+			var roof = createWall(width, depth, false, planes, material);
+			roof.position.y = height - 1;
+			roof.rotation.x = 90 * Math.PI / 180;
+
+			var house = new THREE.Object3D();
+			house.add(frontWall);
+			house.add(backWall);
+			house.add(leftWall);
+			house.add(rightWall);
+			house.add(roof);
+			house.position.x = x;
+			house.position.y = 1;
+			house.position.z = z;
+
+			return house;
+		}
+
+		function createHouses(scene, planes, material) {
+			scene.add(createHouse(10, 10, 7, 3, 5, planes, material));
+		}
+
+		var scene, camera, renderer, controls, stats, clock, person;
 
 		function Start() {
+			clock = new THREE.Clock();
 			scene = new THREE.Scene();
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -272,22 +380,12 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			renderer.setClearColor(0xf0f0f0);
 			renderer.setPixelRatio(window.devicePixelRatio);
-			// renderer.gammaInput = true;
 			renderer.outputEncoding = THREE.LinearEncoding;
 			renderer.shadowMap.enabled = true;
 			document.body.appendChild(renderer.domElement);
 
-			camera.position.set(10, 10, 10);
+			camera.position.set(0, 10, 10);
 			camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-			// var geometry = new THREE.BoxGeometry(1, 1, 1);
-			// var texture = new THREE.TextureLoader().load('textures/11635.jpg');
-			// var material = new THREE.MeshPhongMaterial({ map: texture });
-			// var cube = new THREE.Mesh(geometry, material);
-			// cube.castShadow = true;
-			// cube.receiveShadow = true;
-
-			// scene.add(cube);
 
 			let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
 			hemiLight.color.setHSL(0.6, 1, 0.6);
@@ -304,41 +402,48 @@
 			dirLight.shadow.mapSize.width = 1024;
 			dirLight.shadow.mapSize.height = 1024;
 
-			// // GROUND
-			// var groundGeo = new THREE.PlaneBufferGeometry(10000, 10000);
-			// var groundMat = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x050505 });
-			// groundMat.color.setHSL(0.095, 1, 0.75);
-			// var ground = new THREE.Mesh(groundGeo, groundMat);
-			// ground.position.y = -0.5;
-			// ground.rotation.x = -Math.PI / 2;
-			// scene.add(ground);
-			// ground.receiveShadow = true;
-
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
 			stats.domElement.style.top = '0px';
 			document.body.appendChild(stats.domElement);
 
-			// // uncomment if you need to draw coordinate axes when building the scene
-			// Coordinates.drawAllAxes();
-
 			controls = new OrbitControls(camera, renderer.domElement);
 			// controls = new FirstPersonControls(camera, renderer.domElement);
-			// controls.movementSpeed = 1;
-			// controls.lookSpeed = 0.125;
-			// controls.lookVertical = true;
+			// // controls.movementSpeed = 1;
+			// // controls.lookSpeed = 0.125;
+			// // controls.lookVertical = true;
 			// controls.movementSpeed = 1;
 			// controls.rollSpeed = 0.01;
 			// controls.autoForward = false;
-			// controls.dragToLook = true;
+			// controls.dragToLook = false;
 
-			loadTerrain(scene);
+			var texture_complete_basecolor = new THREE.TextureLoader().load('textures/complete_basecolor.jpg');
+			var texture_complete_normal = new THREE.TextureLoader().load('textures/complete_normal.jpg');
+			var texture_complete_roughness = new THREE.TextureLoader().load('textures/complete_roughness.jpg')
+			var material = new THREE.MeshStandardMaterial({
+				map: texture_complete_basecolor,
+				normalMap: texture_complete_normal,
+				roughnessMap: texture_complete_roughness
+			});
+			var boxPlanes = createBoxPlanes();
+
+			loadTerrain(scene, boxPlanes, material);
+			createHouses(scene, boxPlanes, material);
+
+			person = ceateBox(boxPlanes, "plaster", material);
+			scene.add(person);
 		}
 
+		var personPosition = 0;
+		var speed = 0.01;
 		function Update() {
 			requestAnimationFrame(Update);
+			// controls.update(clock.getDelta());
 			controls.update();
 			stats.update();
+
+			person.position.y = 1 + Math.abs(Math.sin(personPosition + (speed * Math.PI * clock.getDelta())));
+
 			Render();
 		}
 

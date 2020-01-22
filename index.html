@@ -1,0 +1,40 @@
+<html>
+
+<head>
+    <title>Starting Code for 1st Project 2017 - with lights and textures</title>
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="module">
+
+        import { World } from './js/world.js'
+
+        let world = new World();
+        world.initialize(
+            true,
+            (message, progress) => {
+                console.log(`${message} at ${progress * 100}%`);
+            },
+            () => {
+                console.log("World loading completed");
+                world.start();
+            });
+
+    </script>
+</body>
+
+</html>

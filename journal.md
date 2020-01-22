@@ -12,3 +12,19 @@ Corretti i bug di caricamento della heightmap che lasciavano dei buchi durante l
 
 ## 15.01.2020
 Gestita la creazione dell'acqua (il fiume) quando il livello della heightmap è minore di 0.
+
+Visto che la heightmap da 384x384 era troppo grande (gli FPS frame erano di molto sotto ai 60), ho rifatto la heightmap simulando un terreno collinare con una dimensione di 128x128, decisamente più appropriata allo scopo, riportando gli FPS a 60.
+
+## 17.01.2020
+Aggiunte le "case", le "strade" e degli "abitanti" che saltellano da un capo punto all'altro di una strada passando da una casa all'altra.
+
+## 18.01.2020
+Migliorata la creazione del terreno per non "occupare" gli spazi dove viene tracciata una strada.
+Aggiunta una "giostra".
+
+## 19.01.2020
+Impostata una environment map per gestire le riflessioni della giostra che è stata impostata per avere un materiale metallico.
+Impostato un materiale plastico per gli abitanti e fatto modo che si muovino e saltellino a velocità diverse.
+Abilitato la rotazione automatica della telecamera per mostrare la scena da ogni angolo.
+Debuggato una diminuzione degli FPS solamente quando la telecamera è rivolta in direzione circa da (0, 0, -1) a (1, 0, 0). Questo sembra sia causato dalla combinazione del terreno (che è composto da molti vertici) e dall'acqua del fiume che in quei punti risulta più visibile (sembra quindi che il fragment shader dell'acqua sia il collo di bottiglia, come prevedibile vista la complessità).
+Eliminando il fiume non ci sarebbe questo porblema di calo degli FPS, però la scena ne perderebbe di qualtà quindi ho deciso di lasciare l'acqua, in fin dei conti gli FPS passano da 60 a circa 45, una differenza notabile soprattuto nelle animazioni e nel movimento della telecamera che perà restano ancora accettabili.
