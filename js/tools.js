@@ -1,6 +1,8 @@
 import * as THREE from '../lib/three.module.js';
 import { BufferGeometryUtils } from '../lib/BufferGeometryUtils.js';
 
+const useSingleBox = true;
+
 const createBoxPlanes = () => {
     const createPlanes = () => {
         const pxGeometry = new THREE.PlaneBufferGeometry(1, 1);
@@ -28,145 +30,257 @@ const createBoxPlanes = () => {
 
     // Dirt
     {
-        const planes = createPlanes();
+        if (useSingleBox) {
+            const box = new THREE.BoxBufferGeometry();
+            for (let i = 0; i < 6; i++) {
+                box.attributes.uv.array[8 * i + 0] =    0 / 3072;
+                box.attributes.uv.array[8 * i + 1] = 2048 / 2048;
+                box.attributes.uv.array[8 * i + 2] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 3] = 2048 / 2048;
+                box.attributes.uv.array[8 * i + 4] =    0 / 3072;
+                box.attributes.uv.array[8 * i + 5] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 6] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 7] = 1020 / 2048;
+            }
 
-        for (let i = 0; i < planes.length; i++) {
-            planes[i].attributes.uv.array[0] = 0.00;
-            planes[i].attributes.uv.array[1] = 1.00;
-            planes[i].attributes.uv.array[2] = 0.25;
-            planes[i].attributes.uv.array[3] = 1.00;
-            planes[i].attributes.uv.array[4] = 0.00;
-            planes[i].attributes.uv.array[5] = 0.75;
-            planes[i].attributes.uv.array[6] = 0.25;
-            planes[i].attributes.uv.array[7] = 0.75;
+            result.dirt = box;
         }
+        else {
+            const planes = createPlanes();
 
-        result.dirt = planes;
+            for (let i = 0; i < planes.length; i++) {
+                planes[i].attributes.uv.array[0] =    0 / 3072;
+                planes[i].attributes.uv.array[1] = 2048 / 2048;
+                planes[i].attributes.uv.array[2] = 1024 / 3072;
+                planes[i].attributes.uv.array[3] = 2048 / 2048;
+                planes[i].attributes.uv.array[4] =    0 / 3072;
+                planes[i].attributes.uv.array[5] = 1024 / 2048;
+                planes[i].attributes.uv.array[6] = 1024 / 3072;
+                planes[i].attributes.uv.array[7] = 1020 / 2048;
+            }
+
+            result.dirt = planes;
+        }
     }
 
     // Dirt with grass
     {
-        const planes = createPlanes();
+        if (useSingleBox) {
+            const box = new THREE.BoxBufferGeometry();
+            for (let i = 0; i < 6; i++) {
 
-        for (let i = 0; i < planes.length; i++) {
+                // Skip positive and negative Y
+                if (i == 2 || i == 3) {
+                    continue;
+                }
 
-            // Skip positive and negative Y
-            if (i == 2 || i == 3) {
-                continue;
+                box.attributes.uv.array[8 * i + 0] = 2048 / 3072;
+                box.attributes.uv.array[8 * i + 1] = 2048 / 2048;
+                box.attributes.uv.array[8 * i + 2] = 3072 / 3072;
+                box.attributes.uv.array[8 * i + 3] = 2048 / 2048;
+                box.attributes.uv.array[8 * i + 4] = 2048 / 3072;
+                box.attributes.uv.array[8 * i + 5] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 6] = 3072 / 3072;
+                box.attributes.uv.array[8 * i + 7] = 1024 / 2048;
             }
-            planes[i].attributes.uv.array[0] = 0.50;
-            planes[i].attributes.uv.array[1] = 1.00;
-            planes[i].attributes.uv.array[2] = 0.75;
-            planes[i].attributes.uv.array[3] = 1.00;
-            planes[i].attributes.uv.array[4] = 0.50;
-            planes[i].attributes.uv.array[5] = 0.75;
-            planes[i].attributes.uv.array[6] = 0.75;
-            planes[i].attributes.uv.array[7] = 0.75;
+
+            box.attributes.uv.array[8 * 2 + 0] = 1024 / 3072;
+            box.attributes.uv.array[8 * 2 + 1] = 2048 / 2048;
+            box.attributes.uv.array[8 * 2 + 2] = 2048 / 3072;
+            box.attributes.uv.array[8 * 2 + 3] = 2048 / 2048;
+            box.attributes.uv.array[8 * 2 + 4] = 1024 / 3072;
+            box.attributes.uv.array[8 * 2 + 5] = 1024 / 2048;
+            box.attributes.uv.array[8 * 2 + 6] = 2048 / 3072;
+            box.attributes.uv.array[8 * 2 + 7] = 1024 / 2048;
+
+            box.attributes.uv.array[8 * 3 + 0] =    0 / 3072;
+            box.attributes.uv.array[8 * 3 + 1] = 2048 / 2048;
+            box.attributes.uv.array[8 * 3 + 2] = 1024 / 3072;
+            box.attributes.uv.array[8 * 3 + 3] = 2048 / 2048;
+            box.attributes.uv.array[8 * 3 + 4] =    0 / 3072;
+            box.attributes.uv.array[8 * 3 + 5] = 1024 / 2048;
+            box.attributes.uv.array[8 * 3 + 6] = 1024 / 3072;
+            box.attributes.uv.array[8 * 3 + 7] = 1020 / 2048;
+
+            result.dirtGrass = box;
         }
+        else {
+            const planes = createPlanes();
 
-        planes[2].attributes.uv.array[0] = 0.25;
-        planes[2].attributes.uv.array[1] = 1.00;
-        planes[2].attributes.uv.array[2] = 0.50;
-        planes[2].attributes.uv.array[3] = 1.00;
-        planes[2].attributes.uv.array[4] = 0.25;
-        planes[2].attributes.uv.array[5] = 0.75;
-        planes[2].attributes.uv.array[6] = 0.50;
-        planes[2].attributes.uv.array[7] = 0.75;
+            for (let i = 0; i < planes.length; i++) {
 
-        planes[3].attributes.uv.array[0] = 0.00;
-        planes[3].attributes.uv.array[1] = 1.00;
-        planes[3].attributes.uv.array[2] = 0.25;
-        planes[3].attributes.uv.array[3] = 1.00;
-        planes[3].attributes.uv.array[4] = 0.00;
-        planes[3].attributes.uv.array[5] = 0.75;
-        planes[3].attributes.uv.array[6] = 0.25;
-        planes[3].attributes.uv.array[7] = 0.75;
+                // Skip positive and negative Y
+                if (i == 2 || i == 3) {
+                    continue;
+                }
+                planes[i].attributes.uv.array[0] = 2048 / 3072;
+                planes[i].attributes.uv.array[1] = 2048 / 2048;
+                planes[i].attributes.uv.array[2] = 3072 / 3072;
+                planes[i].attributes.uv.array[3] = 2048 / 2048;
+                planes[i].attributes.uv.array[4] = 2048 / 3072;
+                planes[i].attributes.uv.array[5] = 1024 / 2048;
+                planes[i].attributes.uv.array[6] = 3072 / 3072;
+                planes[i].attributes.uv.array[7] = 1024 / 2048;
+            }
 
-        result.dirtGrass = planes;
+            planes[2].attributes.uv.array[0] = 1024 / 3072;
+            planes[2].attributes.uv.array[1] = 2048 / 2048;
+            planes[2].attributes.uv.array[2] = 2048 / 3072;
+            planes[2].attributes.uv.array[3] = 2048 / 2048;
+            planes[2].attributes.uv.array[4] = 1024 / 3072;
+            planes[2].attributes.uv.array[5] = 1024 / 2048;
+            planes[2].attributes.uv.array[6] = 2048 / 3072;
+            planes[2].attributes.uv.array[7] = 1024 / 2048;
+
+            planes[3].attributes.uv.array[0] =    0 / 3072;
+            planes[3].attributes.uv.array[1] = 2048 / 2048;
+            planes[3].attributes.uv.array[2] = 1024 / 3072;
+            planes[3].attributes.uv.array[3] = 2048 / 2048;
+            planes[3].attributes.uv.array[4] =    0 / 3072;
+            planes[3].attributes.uv.array[5] = 1024 / 2048;
+            planes[3].attributes.uv.array[6] = 1024 / 3072;
+            planes[3].attributes.uv.array[7] = 1020 / 2048;
+
+            result.dirtGrass = planes;
+        }
     }
 
     // Plaster
     {
-        const planes = createPlanes();
+        if (useSingleBox) {
+            const box = new THREE.BoxBufferGeometry();
+            for (let i = 0; i < 6; i++) {
+                box.attributes.uv.array[8 * i + 0] = 2048 / 3072;
+                box.attributes.uv.array[8 * i + 1] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 2] = 3072 / 3072;
+                box.attributes.uv.array[8 * i + 3] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 4] = 2048 / 3072;
+                box.attributes.uv.array[8 * i + 5] =    0 / 2048;
+                box.attributes.uv.array[8 * i + 6] = 3072 / 3072;
+                box.attributes.uv.array[8 * i + 7] =    0 / 2048;
+            }
 
-        for (let i = 0; i < planes.length; i++) {
-            planes[i].attributes.uv.array[0] = 0.75;
-            planes[i].attributes.uv.array[1] = 1.00;
-            planes[i].attributes.uv.array[2] = 1.00;
-            planes[i].attributes.uv.array[3] = 1.00;
-            planes[i].attributes.uv.array[4] = 0.75;
-            planes[i].attributes.uv.array[5] = 0.75;
-            planes[i].attributes.uv.array[6] = 1.00;
-            planes[i].attributes.uv.array[7] = 0.75;
+            result.plaster = box;
         }
+        else {
+            const planes = createPlanes();
 
-        result.plaster = planes;
+            for (let i = 0; i < planes.length; i++) {
+                planes[i].attributes.uv.array[0] = 2048 / 3072;
+                planes[i].attributes.uv.array[1] = 1024 / 2048;
+                planes[i].attributes.uv.array[2] = 3072 / 3072;
+                planes[i].attributes.uv.array[3] = 1024 / 2048;
+                planes[i].attributes.uv.array[4] = 2048 / 3072;
+                planes[i].attributes.uv.array[5] =    0 / 2048;
+                planes[i].attributes.uv.array[6] = 3072 / 3072;
+                planes[i].attributes.uv.array[7] =    0 / 2048;
+            }
+
+            result.plaster = planes;
+        }
     }
 
-    // Plaster
+    // Cobblestone
     {
-        const planes = createPlanes();
+        if (useSingleBox) {
+            const box = new THREE.BoxBufferGeometry();
+            for (let i = 0; i < 6; i++) {
+                box.attributes.uv.array[8 * i + 0] =    0 / 3072;
+                box.attributes.uv.array[8 * i + 1] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 2] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 3] = 1024 / 2048;
+                box.attributes.uv.array[8 * i + 4] =    0 / 3072;
+                box.attributes.uv.array[8 * i + 5] =    0 / 2048;
+                box.attributes.uv.array[8 * i + 6] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 7] =    0 / 2048;
+            }
 
-        for (let i = 0; i < planes.length; i++) {
-            planes[i].attributes.uv.array[0] = 0.00;
-            planes[i].attributes.uv.array[1] = 0.75;
-            planes[i].attributes.uv.array[2] = 0.25;
-            planes[i].attributes.uv.array[3] = 0.75;
-            planes[i].attributes.uv.array[4] = 0.00;
-            planes[i].attributes.uv.array[5] = 0.50;
-            planes[i].attributes.uv.array[6] = 0.25;
-            planes[i].attributes.uv.array[7] = 0.50;
+            result.cobblestone = box;
         }
+        else {
+            const planes = createPlanes();
 
-        result.cobblestone = planes;
+            for (let i = 0; i < planes.length; i++) {
+                planes[i].attributes.uv.array[0] = 0.00;
+                planes[i].attributes.uv.array[1] = 0.75;
+                planes[i].attributes.uv.array[2] = 0.25;
+                planes[i].attributes.uv.array[3] = 0.75;
+                planes[i].attributes.uv.array[4] = 0.00;
+                planes[i].attributes.uv.array[5] = 0.50;
+                planes[i].attributes.uv.array[6] = 0.25;
+                planes[i].attributes.uv.array[7] = 0.50;
+            }
+
+            result.cobblestone = planes;
+        }
     }
 
     // Bricks
     {
-        const planes = createPlanes();
+        if (useSingleBox) {
+            const box = new THREE.BoxBufferGeometry();
+            for (let i = 0; i < 6; i++) {
+                box.attributes.uv.array[8 * i + 0] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 1] = (1024 / 3) / 2048;
+                box.attributes.uv.array[8 * i + 2] = (1024 + (1024 / 3)) / 3072;
+                box.attributes.uv.array[8 * i + 3] = (1024 / 3) / 2048;
+                box.attributes.uv.array[8 * i + 4] = 1024 / 3072;
+                box.attributes.uv.array[8 * i + 5] =    0 / 2048;
+                box.attributes.uv.array[8 * i + 6] = (1024 + (1024 / 3)) / 3072;
+                box.attributes.uv.array[8 * i + 7] =    0 / 2048;
+            }
 
-        for (let i = 0; i < planes.length; i++) {
-            // planes[i].attributes.uv.array[0] = 0.25;
-            // planes[i].attributes.uv.array[1] = 0.75;
-            // planes[i].attributes.uv.array[2] = 0.50;
-            // planes[i].attributes.uv.array[3] = 0.75;
-            // planes[i].attributes.uv.array[4] = 0.25;
-            // planes[i].attributes.uv.array[5] = 0.50;
-            // planes[i].attributes.uv.array[6] = 0.50;
-            // planes[i].attributes.uv.array[7] = 0.50;
-            planes[i].attributes.uv.array[0] = 0.25;
-            planes[i].attributes.uv.array[1] = 0.50 + 0.25 / 3;
-            planes[i].attributes.uv.array[2] = 0.25 + 0.25 / 3;
-            planes[i].attributes.uv.array[3] = 0.50 + 0.25 / 3;
-            planes[i].attributes.uv.array[4] = 0.25;
-            planes[i].attributes.uv.array[5] = 0.50;
-            planes[i].attributes.uv.array[6] = 0.25 + 0.25 / 3;
-            planes[i].attributes.uv.array[7] = 0.50;
+            result.bricks = box;
         }
+        else {
+            const planes = createPlanes();
 
-        result.bricks = planes;
+            for (let i = 0; i < planes.length; i++) {
+                planes[i].attributes.uv.array[0] = 1024 / 3072;
+                planes[i].attributes.uv.array[1] = (1024 / 3) / 2048;
+                planes[i].attributes.uv.array[2] = (1024 + (1024 / 3)) / 3072;
+                planes[i].attributes.uv.array[3] = (1024 / 3) / 2048;
+                planes[i].attributes.uv.array[4] = 1024 / 3072;
+                planes[i].attributes.uv.array[5] =    0 / 2048;
+                planes[i].attributes.uv.array[6] = (1024 + (1024 / 3)) / 3072;
+                planes[i].attributes.uv.array[7] =    0 / 2048;
+            }
+
+            result.bricks = planes;
+        }
     }
 
     return result;
 }
 
 const addBoxGeometry = (geometries, planes, material, matrix) => {
-    geometries.push(planes[material][0].clone().applyMatrix(matrix));
-    geometries.push(planes[material][1].clone().applyMatrix(matrix));
-    geometries.push(planes[material][2].clone().applyMatrix(matrix));
-    geometries.push(planes[material][3].clone().applyMatrix(matrix));
-    geometries.push(planes[material][4].clone().applyMatrix(matrix));
-    geometries.push(planes[material][5].clone().applyMatrix(matrix));
+    if (useSingleBox) {
+        geometries.push(planes[material].clone().applyMatrix(matrix));
+    }
+    else {
+        geometries.push(planes[material][0].clone().applyMatrix(matrix));
+        geometries.push(planes[material][1].clone().applyMatrix(matrix));
+        geometries.push(planes[material][2].clone().applyMatrix(matrix));
+        geometries.push(planes[material][3].clone().applyMatrix(matrix));
+        geometries.push(planes[material][4].clone().applyMatrix(matrix));
+        geometries.push(planes[material][5].clone().applyMatrix(matrix));
+    }
 }
 
 const createBox = (planes, planesMaterialName, material) => {
     const geometries = [];
-    geometries.push(planes[planesMaterialName][0].clone());
-    geometries.push(planes[planesMaterialName][1].clone());
-    geometries.push(planes[planesMaterialName][2].clone());
-    geometries.push(planes[planesMaterialName][3].clone());
-    geometries.push(planes[planesMaterialName][4].clone());
-    geometries.push(planes[planesMaterialName][5].clone());
+
+    if (useSingleBox) {
+        geometries.push(planes[planesMaterialName].clone());
+    }
+    else {
+        geometries.push(planes[planesMaterialName][0].clone());
+        geometries.push(planes[planesMaterialName][1].clone());
+        geometries.push(planes[planesMaterialName][2].clone());
+        geometries.push(planes[planesMaterialName][3].clone());
+        geometries.push(planes[planesMaterialName][4].clone());
+        geometries.push(planes[planesMaterialName][5].clone());
+    }
 
     const boxGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
     boxGeometry.computeBoundingSphere();
